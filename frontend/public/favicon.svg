@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Finance Flow Pro">
+  <defs>
+    <linearGradient id="bg" x1="64" x2="448" y1="64" y2="448" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0E7490"/>
+      <stop offset="1" stop-color="#10B981"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="128" x2="390" y1="362" y2="148" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F97316"/>
+      <stop offset="1" stop-color="#FACC15"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="108" fill="url(#bg)"/>
+  <path d="M128 332c56-70 98-88 138-70 47 22 68 0 118-82" fill="none" stroke="url(#accent)" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M352 168h44v44" fill="none" stroke="#FACC15" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="118" y="364" width="276" height="38" rx="19" fill="#ECFEFF" opacity=".92"/>
+  <rect x="118" y="110" width="276" height="64" rx="32" fill="#ECFEFF" opacity=".18"/>
+</svg>
