@@ -131,8 +131,43 @@ http://localhost:8080/swagger-ui.html
 
 ## 📸 Screenshots
 
-Adicione imagens de: - Login - Dashboard - Receitas - Despesas -
-Relatórios - Categorias
+### 🏠 1. Login
+
+Tela inicial da aplicação, com acesso seguro através de autenticação JWT.
+
+<p align="center">
+  <img src="./screenshots/Login_gestãoFinanceira.png" alt="Tela de Login" width="100%">
+</p>
+
+---
+
+### 📊 2. Dashboard
+
+Visão geral das finanças com indicadores, gráficos, fluxo de caixa e resumo das principais métricas.
+
+<p align="center">
+  <img src="./screenshots/Dashboard_gestãoFinanceira.png" alt="Dashboard Financeiro" width="100%">
+</p>
+
+---
+
+### 💸 3. Transações
+
+Gerenciamento completo de receitas e despesas, com filtros, paginação, exportação para PDF/Excel e operações de edição e exclusão.
+
+<p align="center">
+  <img src="./screenshots/Transacoes_gestãoFinanceira.png" alt="Gestão de Transações" width="100%">
+</p>
+
+---
+
+### 🎯 4. Metas
+
+Acompanhamento de metas financeiras, progresso, valores acumulados e objetivos planejados.
+
+<p align="center">
+  <img src="./screenshots/Metas_gestãoFinanceira.png" alt="Metas Financeiras" width="100%">
+</p>
 
 ## 🚀 Roadmap
 
