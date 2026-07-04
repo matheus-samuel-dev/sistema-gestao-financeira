@@ -3,6 +3,7 @@ package com.portfolio.finance.service;
 import com.portfolio.finance.domain.entity.FinancialGoal;
 import com.portfolio.finance.domain.entity.FinancialTransaction;
 import com.portfolio.finance.domain.enums.GoalStatus;
+import com.portfolio.finance.domain.enums.TransactionStatus;
 import com.portfolio.finance.domain.enums.TransactionType;
 import com.portfolio.finance.dto.dashboard.BalanceEvolutionPoint;
 import com.portfolio.finance.dto.dashboard.CategoryBreakdownPoint;
@@ -20,6 +21,7 @@ import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -50,7 +52,9 @@ public class DashboardService {
             TransactionType type,
             Long categoryId,
             LocalDate startDate,
-            LocalDate endDate
+            LocalDate endDate,
+            BigDecimal minAmount,
+            BigDecimal maxAmount
     ) {
         TransactionFilter baseFilter = TransactionFilter.builder()
                 .month(month)
@@ -59,6 +63,8 @@ public class DashboardService {
                 .categoryId(categoryId)
                 .startDate(startDate)
                 .endDate(endDate)
+                .minAmount(minAmount)
+                .maxAmount(maxAmount)
                 .sortBy("transactionDate")
                 .sortDirection("desc")
                 .page(0)
@@ -114,27 +120,34 @@ public class DashboardService {
     private BigDecimal sumByType(List<FinancialTransaction> transactions, TransactionType type) {
         return transactions.stream()
                 .filter(transaction -> transaction.getType() == type)
-                .filter(transaction -> transaction.getStatus() != com.portfolio.finance.domain.enums.TransactionStatus.CANCELED)
+                .filter(transaction -> transaction.getStatus() != TransactionStatus.CANCELED)
                 .map(FinancialTransaction::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private List<CategoryBreakdownPoint> buildCategoryBreakdown(List<FinancialTransaction> transactions) {
-        return transactions.stream()
+        Map<Long, CategoryBreakdownAccumulator> breakdownByCategory = new LinkedHashMap<>();
+
+        transactions.stream()
                 .filter(transaction -> transaction.getType() == TransactionType.EXPENSE)
-                .collect(Collectors.groupingBy(
-                        transaction -> transaction.getCategory().getName(),
-                        Collectors.reducing(BigDecimal.ZERO, FinancialTransaction::getAmount, BigDecimal::add)
-                ))
-                .entrySet()
+                .filter(transaction -> transaction.getStatus() != TransactionStatus.CANCELED)
+                .forEach(transaction -> breakdownByCategory.merge(
+                        transaction.getCategory().getId(),
+                        new CategoryBreakdownAccumulator(
+                                transaction.getCategory().getName(),
+                                transaction.getCategory().getColor(),
+                                transaction.getAmount()
+                        ),
+                        CategoryBreakdownAccumulator::add
+                ));
+
+        return breakdownByCategory.values()
                 .stream()
-                .map(entry -> {
-                    FinancialTransaction sample = transactions.stream()
-                            .filter(transaction -> transaction.getCategory().getName().equals(entry.getKey()))
-                            .findFirst()
-                            .orElseThrow();
-                    return new CategoryBreakdownPoint(entry.getKey(), entry.getValue(), sample.getCategory().getColor());
-                })
+                .map(accumulator -> new CategoryBreakdownPoint(
+                        accumulator.name(),
+                        accumulator.value(),
+                        accumulator.color()
+                ))
                 .sorted(Comparator.comparing(CategoryBreakdownPoint::value).reversed())
                 .toList();
     }
@@ -165,6 +178,7 @@ public class DashboardService {
 
     private List<TypeCountPoint> buildTypeCount(List<FinancialTransaction> transactions) {
         Map<TransactionType, Long> counts = transactions.stream()
+                .filter(transaction -> transaction.getStatus() != TransactionStatus.CANCELED)
                 .collect(Collectors.groupingBy(FinancialTransaction::getType, Collectors.counting()));
 
         return List.of(
@@ -177,8 +191,15 @@ public class DashboardService {
         return transactions.stream()
                 .filter(transaction -> transaction.getType() == type)
                 .filter(transaction -> YearMonth.from(transaction.getTransactionDate()).equals(month))
-                .filter(transaction -> transaction.getStatus() != com.portfolio.finance.domain.enums.TransactionStatus.CANCELED)
+                .filter(transaction -> transaction.getStatus() != TransactionStatus.CANCELED)
                 .map(FinancialTransaction::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private record CategoryBreakdownAccumulator(String name, String color, BigDecimal value) {
+
+        private CategoryBreakdownAccumulator add(CategoryBreakdownAccumulator other) {
+            return new CategoryBreakdownAccumulator(name, color, value.add(other.value));
+        }
     }
 }

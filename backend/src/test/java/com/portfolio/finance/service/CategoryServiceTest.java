@@ -116,4 +116,42 @@ class CategoryServiceTest {
         assertThat(response.type()).isEqualTo(TransactionType.INCOME);
         verify(categoryRepository).save(any(Category.class));
     }
+
+    @Test
+    void findActiveOwnedCategoryRejectsInactiveCategory() {
+        Category category = Category.builder()
+                .id(10L)
+                .name("Marketing")
+                .type(TransactionType.EXPENSE)
+                .color("#6366F1")
+                .icon("campaign")
+                .active(false)
+                .user(user)
+                .build();
+
+        when(categoryRepository.findByIdAndUser(10L, user)).thenReturn(Optional.of(category));
+
+        assertThatThrownBy(() -> categoryService.findActiveOwnedCategory(10L, TransactionType.EXPENSE, user))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("inativa");
+    }
+
+    @Test
+    void findActiveOwnedCategoryRejectsMismatchedTransactionType() {
+        Category category = Category.builder()
+                .id(10L)
+                .name("Receitas")
+                .type(TransactionType.INCOME)
+                .color("#10B981")
+                .icon("paid")
+                .active(true)
+                .user(user)
+                .build();
+
+        when(categoryRepository.findByIdAndUser(10L, user)).thenReturn(Optional.of(category));
+
+        assertThatThrownBy(() -> categoryService.findActiveOwnedCategory(10L, TransactionType.EXPENSE, user))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("não corresponde");
+    }
 }

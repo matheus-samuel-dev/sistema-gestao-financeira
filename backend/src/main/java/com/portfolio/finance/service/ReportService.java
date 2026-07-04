@@ -1,6 +1,7 @@
 package com.portfolio.finance.service;
 
 import com.portfolio.finance.domain.entity.FinancialTransaction;
+import com.portfolio.finance.domain.enums.TransactionStatus;
 import com.portfolio.finance.domain.enums.TransactionType;
 import com.portfolio.finance.dto.report.ReportCategorySummary;
 import com.portfolio.finance.dto.report.ReportMonthlySummary;
@@ -42,7 +43,9 @@ public class ReportService {
             TransactionType type,
             Long categoryId,
             LocalDate startDate,
-            LocalDate endDate
+            LocalDate endDate,
+            BigDecimal minAmount,
+            BigDecimal maxAmount
     ) {
         TransactionFilter filter = TransactionFilter.builder()
                 .month(month)
@@ -51,6 +54,8 @@ public class ReportService {
                 .categoryId(categoryId)
                 .startDate(startDate)
                 .endDate(endDate)
+                .minAmount(minAmount)
+                .maxAmount(maxAmount)
                 .page(0)
                 .size(3000)
                 .sortBy("transactionDate")
@@ -69,6 +74,7 @@ public class ReportService {
                 buildCategorySummary(filteredTransactions, TransactionType.EXPENSE),
                 filteredTransactions.stream()
                         .filter(transaction -> transaction.getType() == TransactionType.EXPENSE)
+                        .filter(transaction -> transaction.getStatus() != TransactionStatus.CANCELED)
                         .sorted(Comparator.comparing(FinancialTransaction::getAmount).reversed())
                         .limit(10)
                         .map(transactionMapper::toResponse)
@@ -81,6 +87,7 @@ public class ReportService {
     private BigDecimal sumByType(List<FinancialTransaction> transactions, TransactionType type) {
         return transactions.stream()
                 .filter(transaction -> transaction.getType() == type)
+                .filter(transaction -> transaction.getStatus() != TransactionStatus.CANCELED)
                 .map(FinancialTransaction::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
@@ -88,6 +95,7 @@ public class ReportService {
     private List<ReportCategorySummary> buildCategorySummary(List<FinancialTransaction> transactions, TransactionType type) {
         return transactions.stream()
                 .filter(transaction -> transaction.getType() == type)
+                .filter(transaction -> transaction.getStatus() != TransactionStatus.CANCELED)
                 .collect(Collectors.groupingBy(
                         FinancialTransaction::getCategory,
                         Collectors.reducing(BigDecimal.ZERO, FinancialTransaction::getAmount, BigDecimal::add)
@@ -123,12 +131,12 @@ public class ReportService {
     }
 
     private List<ReportMonthlySummary> buildComparisonSummaries(List<FinancialTransaction> transactions, LocalDate referenceDate) {
+        Map<YearMonth, List<FinancialTransaction>> grouped = transactions.stream()
+                .collect(Collectors.groupingBy(transaction -> YearMonth.from(transaction.getTransactionDate())));
         List<ReportMonthlySummary> summaries = new ArrayList<>();
         for (int i = 5; i >= 0; i--) {
             YearMonth month = YearMonth.from(referenceDate).minusMonths(i);
-            List<FinancialTransaction> monthTransactions = transactions.stream()
-                    .filter(transaction -> YearMonth.from(transaction.getTransactionDate()).equals(month))
-                    .toList();
+            List<FinancialTransaction> monthTransactions = grouped.getOrDefault(month, List.of());
             BigDecimal income = sumByType(monthTransactions, TransactionType.INCOME);
             BigDecimal expense = sumByType(monthTransactions, TransactionType.EXPENSE);
             summaries.add(new ReportMonthlySummary(month.format(MONTH_LABEL_FORMATTER), income, expense, income.subtract(expense)));

@@ -10,6 +10,7 @@ import com.portfolio.finance.service.TransactionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -45,6 +46,8 @@ public class TransactionController {
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) LocalDate startDate,
             @RequestParam(required = false) LocalDate endDate,
+            @RequestParam(required = false) BigDecimal minAmount,
+            @RequestParam(required = false) BigDecimal maxAmount,
             @RequestParam(required = false) TransactionStatus status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -59,6 +62,8 @@ public class TransactionController {
                 .year(year)
                 .startDate(startDate)
                 .endDate(endDate)
+                .minAmount(minAmount)
+                .maxAmount(maxAmount)
                 .status(status)
                 .page(page)
                 .size(size)

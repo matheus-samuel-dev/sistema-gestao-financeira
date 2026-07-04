@@ -5,6 +5,7 @@ import com.portfolio.finance.dto.report.ReportResponse;
 import com.portfolio.finance.service.ReportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,8 +31,10 @@ public class ReportController {
             @RequestParam(required = false) TransactionType type,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) LocalDate startDate,
-            @RequestParam(required = false) LocalDate endDate
+            @RequestParam(required = false) LocalDate endDate,
+            @RequestParam(required = false) BigDecimal minAmount,
+            @RequestParam(required = false) BigDecimal maxAmount
     ) {
-        return reportService.generate(month, year, type, categoryId, startDate, endDate);
+        return reportService.generate(month, year, type, categoryId, startDate, endDate, minAmount, maxAmount);
     }
 }

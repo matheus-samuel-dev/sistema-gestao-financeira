@@ -198,6 +198,14 @@ public class TransactionService {
                 predicates.getExpressions().add(cb.lessThanOrEqualTo(root.get("transactionDate"), filter.getEndDate()));
             }
 
+            if (filter.getMinAmount() != null) {
+                predicates.getExpressions().add(cb.greaterThanOrEqualTo(root.get("amount"), filter.getMinAmount()));
+            }
+
+            if (filter.getMaxAmount() != null) {
+                predicates.getExpressions().add(cb.lessThanOrEqualTo(root.get("amount"), filter.getMaxAmount()));
+            }
+
             return predicates;
         };
     }

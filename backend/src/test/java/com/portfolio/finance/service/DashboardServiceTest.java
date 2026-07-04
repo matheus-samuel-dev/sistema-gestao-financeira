@@ -75,7 +75,7 @@ class DashboardServiceTest {
         when(goalService.findEntitiesForCurrentUser()).thenReturn(List.of());
         when(transactionService.recentTransactions()).thenReturn(List.of());
 
-        DashboardResponse response = dashboardService.getDashboard(6, 2026, null, null, null, null);
+        DashboardResponse response = dashboardService.getDashboard(6, 2026, null, null, null, null, null, null);
 
         assertThat(response.currentBalance()).isEqualByComparingTo("7500.00");
         assertThat(response.monthlyIncome()).isEqualByComparingTo("10000.00");
@@ -85,7 +85,38 @@ class DashboardServiceTest {
         assertThat(response.topExpenseCategory()).isEqualTo("Tecnologia");
     }
 
+    @Test
+    void dashboardIgnoresCanceledTransactionsInFinancialIndicators() {
+        List<FinancialTransaction> transactions = List.of(
+                transaction("Venda confirmada", new BigDecimal("1000.00"), TransactionType.INCOME, incomeCategory),
+                transaction("Despesa confirmada", new BigDecimal("250.00"), TransactionType.EXPENSE, expenseCategory),
+                transaction("Despesa cancelada", new BigDecimal("900.00"), TransactionType.EXPENSE, expenseCategory, TransactionStatus.CANCELED)
+        );
+
+        when(transactionService.findEntitiesForCurrentUser(any())).thenReturn(transactions);
+        when(goalService.findEntitiesForCurrentUser()).thenReturn(List.of());
+        when(transactionService.recentTransactions()).thenReturn(List.of());
+
+        DashboardResponse response = dashboardService.getDashboard(6, 2026, null, null, null, null, null, null);
+
+        assertThat(response.monthlyIncome()).isEqualByComparingTo("1000.00");
+        assertThat(response.monthlyExpenses()).isEqualByComparingTo("250.00");
+        assertThat(response.currentBalance()).isEqualByComparingTo("750.00");
+        assertThat(response.expensesByCategory()).singleElement()
+                .satisfies(point -> assertThat(point.value()).isEqualByComparingTo("250.00"));
+    }
+
     private FinancialTransaction transaction(String description, BigDecimal amount, TransactionType type, Category category) {
+        return transaction(description, amount, type, category, TransactionStatus.CONFIRMED);
+    }
+
+    private FinancialTransaction transaction(
+            String description,
+            BigDecimal amount,
+            TransactionType type,
+            Category category,
+            TransactionStatus status
+    ) {
         return FinancialTransaction.builder()
                 .id((long) description.hashCode())
                 .description(description)
@@ -93,7 +124,7 @@ class DashboardServiceTest {
                 .type(type)
                 .transactionDate(LocalDate.of(2026, 6, 10))
                 .paymentMethod("PIX")
-                .status(TransactionStatus.CONFIRMED)
+                .status(status)
                 .recurring(false)
                 .category(category)
                 .user(user)

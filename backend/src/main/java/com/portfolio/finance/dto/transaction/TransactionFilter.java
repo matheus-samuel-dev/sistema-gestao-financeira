@@ -2,6 +2,7 @@ package com.portfolio.finance.dto.transaction;
 
 import com.portfolio.finance.domain.enums.TransactionStatus;
 import com.portfolio.finance.domain.enums.TransactionType;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,6 +18,8 @@ public class TransactionFilter {
     private Integer year;
     private LocalDate startDate;
     private LocalDate endDate;
+    private BigDecimal minAmount;
+    private BigDecimal maxAmount;
     private TransactionStatus status;
     @Builder.Default
     private int page = 0;
