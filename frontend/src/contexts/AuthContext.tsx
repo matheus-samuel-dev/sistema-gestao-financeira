@@ -25,43 +25,34 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+interface SessionState {
+  user: UserProfile | null;
+  token: string | null;
+}
+
+function readInitialSession(): SessionState {
+  const token = getStoredToken();
+  const user = getStoredUser();
+
+  if (token && !user) {
+    clearStoredSession();
+    return { token: null, user: null };
+  }
+
+  return { token, user };
+}
+
 export function clearSession() {
   clearStoredSession();
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<UserProfile | null>(() => getStoredUser());
-  const [token, setToken] = useState<string | null>(() => getStoredToken());
-  const [loading, setLoading] = useState(() => Boolean(getStoredToken()) && !getStoredUser());
-
-  useEffect(() => {
-    async function bootstrapSession() {
-      if (!getStoredToken()) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { data } = await api.get<AuthResponse>('/auth/me');
-        persistSession(data);
-        setToken(data.token);
-        setUser(data.user);
-      } catch {
-        clearSession();
-        setToken(null);
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    void bootstrapSession();
-  }, []);
+  const [{ token, user }, setSession] = useState<SessionState>(readInitialSession);
+  const loading = false;
 
   useEffect(() => {
     function handleSessionExpired() {
-      setToken(null);
-      setUser(null);
+      setSession({ token: null, user: null });
     }
 
     window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
@@ -71,29 +62,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (payload: LoginRequest) => {
     const { data } = await api.post<AuthResponse>('/auth/login', payload);
     persistSession(data);
-    setToken(data.token);
-    setUser(data.user);
+    setSession({ token: data.token, user: data.user });
   }, []);
 
   const register = useCallback(async (payload: RegisterRequest) => {
     const { data } = await api.post<AuthResponse>('/auth/register', payload);
     persistSession(data);
-    setToken(data.token);
-    setUser(data.user);
+    setSession({ token: data.token, user: data.user });
   }, []);
 
   const logout = useCallback(() => {
     clearSession();
-    setToken(null);
-    setUser(null);
+    setSession({ token: null, user: null });
   }, []);
 
   const refreshSession = useCallback(async () => {
     try {
       const { data } = await api.get<AuthResponse>('/auth/me');
       persistSession(data);
-      setToken(data.token);
-      setUser(data.user);
+      setSession({ token: data.token, user: data.user });
     } catch (error) {
       logout();
       throw new Error(getErrorMessage(error, 'Sua sessão expirou. Entre novamente.'));
@@ -110,12 +97,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       themePreference,
     });
     persistStoredUser(data);
-    setUser(data);
+    setSession((current) => ({ ...current, user: data }));
   }, [user]);
 
   const updateStoredUser = useCallback((nextUser: UserProfile) => {
     persistStoredUser(nextUser);
-    setUser(nextUser);
+    setSession((current) => ({ ...current, user: nextUser }));
   }, []);
 
   const value = useMemo(

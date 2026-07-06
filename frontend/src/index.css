@@ -31,6 +31,218 @@ select {
   font: inherit;
 }
 
+.route-loading {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  background: #f4f7fb;
+}
+
+.route-loading::after {
+  content: "";
+  width: 30px;
+  height: 30px;
+  border: 3px solid rgba(14, 116, 144, 0.18);
+  border-top-color: #0e7490;
+  border-radius: 50%;
+  animation: routeSpin 720ms linear infinite;
+}
+
+@keyframes routeSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.login-page {
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  background:
+    radial-gradient(circle at top left, rgba(14, 116, 144, 0.22), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(249, 115, 22, 0.18), transparent 24%),
+    linear-gradient(180deg, #041420 0%, #0e1726 100%);
+  color: #0f172a;
+}
+
+.login-card {
+  width: min(100%, 480px);
+  padding: 32px;
+  border: 1px solid rgba(15, 23, 42, 0.09);
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 28px 70px rgba(2, 12, 27, 0.35);
+}
+
+.login-mark {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: rgba(14, 116, 144, 0.14);
+  color: #0e7490;
+}
+
+.login-mark span {
+  width: 25px;
+  height: 18px;
+  border-left: 3px solid currentColor;
+  border-bottom: 3px solid currentColor;
+  border-radius: 0 0 0 4px;
+  position: relative;
+}
+
+.login-mark span::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  right: -2px;
+  bottom: 3px;
+  height: 14px;
+  border-top: 3px solid currentColor;
+  border-right: 3px solid currentColor;
+  transform: skewY(-26deg);
+  transform-origin: left bottom;
+}
+
+.login-copy {
+  margin-top: 18px;
+}
+
+.login-copy h1 {
+  margin: 0;
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  font-size: 34px;
+  line-height: 1.12;
+}
+
+.login-copy p,
+.login-register {
+  color: #475569;
+  line-height: 1.55;
+}
+
+.login-copy p {
+  margin: 12px 0 0;
+  font-size: 16px;
+}
+
+.login-alert {
+  margin-top: 22px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.login-alert--error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #991b1b;
+}
+
+.login-alert--info {
+  background: rgba(14, 116, 144, 0.12);
+  color: #155e75;
+}
+
+.login-form {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.login-field {
+  display: grid;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.login-field span {
+  color: #334155;
+  font-size: 14px;
+}
+
+.login-field input {
+  width: 100%;
+  min-height: 46px;
+  padding: 11px 13px;
+  border: 1px solid rgba(15, 23, 42, 0.22);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #0f172a;
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.login-field input:focus {
+  border-color: rgba(14, 116, 144, 0.62);
+  box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.14);
+}
+
+.login-submit {
+  min-height: 46px;
+  border: 0;
+  border-radius: 14px;
+  background: #0e7490;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 800;
+  transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.login-submit:hover:not(:disabled) {
+  background: #155e75;
+  transform: translateY(-1px);
+}
+
+.login-submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.login-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.login-register {
+  margin: 18px 0 0;
+  font-size: 14px;
+}
+
+.login-register a {
+  color: #0e7490;
+  font-weight: 800;
+}
+
+@media (max-width: 520px) {
+  .login-page {
+    align-items: flex-start;
+    padding: 18px 12px;
+  }
+
+  .login-card {
+    padding: 22px;
+    border-radius: 18px;
+  }
+
+  .login-mark {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+  }
+
+  .login-copy h1 {
+    font-size: 26px;
+  }
+
+  .login-copy p {
+    font-size: 14px;
+  }
+}
+
 .MuiTypography-root,
 .MuiButton-root,
 .MuiChip-root,

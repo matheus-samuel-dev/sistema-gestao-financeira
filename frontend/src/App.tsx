@@ -1,13 +1,12 @@
-import { CircularProgress, Stack } from '@mui/material';
 import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 
-const AppShell = lazy(() => import('./components/layout/AppShell').then((module) => ({ default: module.AppShell })));
+const AuthenticatedApp = lazy(() => import('./components/layout/AuthenticatedApp').then((module) => ({ default: module.AuthenticatedApp })));
 const DashboardPage = lazy(() => import('./pages/DashboardPage').then((module) => ({ default: module.DashboardPage })));
-const LandingPage = lazy(() => import('./pages/LandingPage').then((module) => ({ default: module.LandingPage })));
+const LandingRoute = lazy(() => import('./pages/LandingRoute').then((module) => ({ default: module.LandingRoute })));
 const LoginPage = lazy(() => import('./pages/LoginPage').then((module) => ({ default: module.LoginPage })));
-const RegisterPage = lazy(() => import('./pages/RegisterPage').then((module) => ({ default: module.RegisterPage })));
+const RegisterRoute = lazy(() => import('./pages/RegisterRoute').then((module) => ({ default: module.RegisterRoute })));
 const TransactionsPage = lazy(() => import('./pages/TransactionsPage').then((module) => ({ default: module.TransactionsPage })));
 const CategoriesPage = lazy(() => import('./pages/CategoriesPage').then((module) => ({ default: module.CategoriesPage })));
 const GoalsPage = lazy(() => import('./pages/GoalsPage').then((module) => ({ default: module.GoalsPage })));
@@ -17,21 +16,13 @@ const RecurringPage = lazy(() => import('./pages/RecurringPage').then((module) =
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then((module) => ({ default: module.NotFoundPage })));
 
 function AppLoading() {
-  return (
-    <Stack alignItems="center" justifyContent="center" minHeight="100vh" spacing={2}>
-      <CircularProgress size={30} />
-    </Stack>
-  );
+  return <div aria-label="Carregando" className="route-loading" role="status" />;
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { token, user } = useAuth();
 
-  if (loading) {
-    return <AppLoading />;
-  }
-
-  if (!user) {
+  if (!token || !user) {
     return <Navigate replace to="/login" />;
   }
 
@@ -39,13 +30,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { token, user } = useAuth();
 
-  if (loading) {
-    return <AppLoading />;
-  }
-
-  if (user) {
+  if (token && user) {
     return <Navigate replace to="/app/dashboard" />;
   }
 
@@ -56,7 +43,7 @@ export default function App() {
   return (
     <Suspense fallback={<AppLoading />}>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<LandingRoute />} />
         <Route
           path="/login"
           element={
@@ -69,7 +56,7 @@ export default function App() {
           path="/cadastro"
           element={
             <PublicOnlyRoute>
-              <RegisterPage />
+              <RegisterRoute />
             </PublicOnlyRoute>
           }
         />
@@ -77,7 +64,7 @@ export default function App() {
           path="/app"
           element={
             <ProtectedRoute>
-              <AppShell />
+              <AuthenticatedApp />
             </ProtectedRoute>
           }
         >

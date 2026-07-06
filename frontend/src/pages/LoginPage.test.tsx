@@ -3,7 +3,6 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { api } from '../api/client';
 import { AuthProvider } from '../contexts/AuthContext';
-import { ToastProvider } from '../contexts/ToastContext';
 import { LoginPage } from './LoginPage';
 
 describe('LoginPage', () => {
@@ -18,7 +17,7 @@ describe('LoginPage', () => {
         token: 'jwt-token',
         user: {
           id: 1,
-          name: 'Usuário Demo',
+          name: 'Usuario Demo',
           email: 'demo@financeiro.com',
           accountType: 'BUSINESS',
           themePreference: 'LIGHT',
@@ -30,9 +29,7 @@ describe('LoginPage', () => {
     render(
       <MemoryRouter initialEntries={['/login']}>
         <AuthProvider>
-          <ToastProvider>
-            <LoginPage />
-          </ToastProvider>
+          <LoginPage />
         </AuthProvider>
       </MemoryRouter>,
     );
@@ -52,9 +49,7 @@ describe('LoginPage', () => {
     render(
       <MemoryRouter initialEntries={['/login']}>
         <AuthProvider>
-          <ToastProvider>
-            <LoginPage />
-          </ToastProvider>
+          <LoginPage />
         </AuthProvider>
       </MemoryRouter>,
     );
@@ -63,5 +58,24 @@ describe('LoginPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
 
     expect(await screen.findByText('Informe um e-mail válido.')).toBeInTheDocument();
+  });
+
+  it('enables submit as soon as email and password are filled', () => {
+    render(
+      <MemoryRouter initialEntries={['/login']}>
+        <AuthProvider>
+          <LoginPage />
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+
+    const button = screen.getByRole('button', { name: 'Entrar' });
+    expect(button).toBeEnabled();
+
+    fireEvent.change(screen.getByLabelText('Senha'), { target: { value: '' } });
+    expect(button).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText('Senha'), { target: { value: '123456' } });
+    expect(button).toBeEnabled();
   });
 });
