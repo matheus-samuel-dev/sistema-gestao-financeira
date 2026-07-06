@@ -15,6 +15,7 @@ export default tseslint.config(
       ecmaVersion: 2022,
       globals: {
         CustomEvent: 'readonly',
+        console: 'readonly',
         Element: 'readonly',
         HTMLElement: 'readonly',
         ResizeObserver: 'readonly',

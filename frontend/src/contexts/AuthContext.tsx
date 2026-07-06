@@ -15,12 +15,16 @@ interface AuthContextValue {
   user: UserProfile | null;
   token: string | null;
   loading: boolean;
-  login: (payload: LoginRequest) => Promise<void>;
+  login: (payload: LoginRequest, options?: AuthRequestOptions) => Promise<void>;
   register: (payload: RegisterRequest) => Promise<void>;
   logout: () => void;
   refreshSession: () => Promise<void>;
   syncThemePreference: (themePreference: ThemePreference) => Promise<void>;
   updateStoredUser: (user: UserProfile) => void;
+}
+
+interface AuthRequestOptions {
+  signal?: AbortSignal;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -59,8 +63,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
   }, []);
 
-  const login = useCallback(async (payload: LoginRequest) => {
-    const { data } = await api.post<AuthResponse>('/auth/login', payload);
+  const login = useCallback(async (payload: LoginRequest, options?: AuthRequestOptions) => {
+    const { data } = await api.post<AuthResponse>('/auth/login', payload, { signal: options?.signal });
     persistSession(data);
     setSession({ token: data.token, user: data.user });
   }, []);

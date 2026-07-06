@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { AxiosError } from 'axios';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { api } from '../api/client';
@@ -9,6 +10,7 @@ describe('LoginPage', () => {
   beforeEach(() => {
     localStorage.clear();
     vi.restoreAllMocks();
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
   });
 
   it('submits demo credentials and persists the authenticated session', async () => {
@@ -40,7 +42,7 @@ describe('LoginPage', () => {
       expect(api.post).toHaveBeenCalledWith('/auth/login', {
         email: 'demo@financeiro.com',
         password: '123456',
-      });
+      }, expect.objectContaining({ signal: expect.any(Object) }));
     });
     expect(localStorage.getItem('finance-flow-token')).toBe('jwt-token');
   });
@@ -77,5 +79,22 @@ describe('LoginPage', () => {
 
     fireEvent.change(screen.getByLabelText('Senha'), { target: { value: '123456' } });
     expect(button).toBeEnabled();
+  });
+
+  it('shows a friendly message and restores the button when login times out', async () => {
+    vi.spyOn(api, 'post').mockRejectedValue(new AxiosError('timeout of 12000ms exceeded', 'ECONNABORTED'));
+
+    render(
+      <MemoryRouter initialEntries={['/login']}>
+        <AuthProvider>
+          <LoginPage />
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
+
+    expect(await screen.findByText('O login demorou mais que o esperado. Verifique sua conexão e tente novamente.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Entrar' })).toBeEnabled();
   });
 });
