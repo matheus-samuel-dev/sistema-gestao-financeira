@@ -152,6 +152,6 @@ class TransactionServiceTest {
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("Transação não encontrada");
 
-        verify(financialTransactionRepository, never()).delete(any());
+        verify(financialTransactionRepository, never()).delete(any(FinancialTransaction.class));
     }
 }

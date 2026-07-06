@@ -2,6 +2,14 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { api } from '../api/client';
 import type { AuthResponse, LoginRequest, RegisterRequest, ThemePreference, UserProfile } from '../types/session';
 import { getErrorMessage } from '../utils/apiError';
+import {
+  clearStoredSession,
+  getStoredToken,
+  getStoredUser,
+  persistSession,
+  persistStoredUser,
+  SESSION_EXPIRED_EVENT,
+} from '../utils/sessionStorage';
 
 interface AuthContextValue {
   user: UserProfile | null;
@@ -17,30 +25,18 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const TOKEN_KEY = 'finance-flow-token';
-const USER_KEY = 'finance-flow-user';
-
-function persistSession(data: AuthResponse) {
-  localStorage.setItem(TOKEN_KEY, data.token);
-  localStorage.setItem(USER_KEY, JSON.stringify(data.user));
-}
-
 export function clearSession() {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(USER_KEY);
+  clearStoredSession();
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<UserProfile | null>(() => {
-    const raw = localStorage.getItem(USER_KEY);
-    return raw ? (JSON.parse(raw) as UserProfile) : null;
-  });
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<UserProfile | null>(() => getStoredUser());
+  const [token, setToken] = useState<string | null>(() => getStoredToken());
+  const [loading, setLoading] = useState(() => Boolean(getStoredToken()) && !getStoredUser());
 
   useEffect(() => {
     async function bootstrapSession() {
-      if (!localStorage.getItem(TOKEN_KEY)) {
+      if (!getStoredToken()) {
         setLoading(false);
         return;
       }
@@ -60,6 +56,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     void bootstrapSession();
+  }, []);
+
+  useEffect(() => {
+    function handleSessionExpired() {
+      setToken(null);
+      setUser(null);
+    }
+
+    window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
   }, []);
 
   const login = useCallback(async (payload: LoginRequest) => {
@@ -103,12 +109,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       accountType: user.accountType,
       themePreference,
     });
-    localStorage.setItem(USER_KEY, JSON.stringify(data));
+    persistStoredUser(data);
     setUser(data);
   }, [user]);
 
   const updateStoredUser = useCallback((nextUser: UserProfile) => {
-    localStorage.setItem(USER_KEY, JSON.stringify(nextUser));
+    persistStoredUser(nextUser);
     setUser(nextUser);
   }, []);
 

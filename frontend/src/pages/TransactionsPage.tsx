@@ -45,6 +45,8 @@ interface TransactionFilters {
   year: string;
   startDate: string;
   endDate: string;
+  minAmount: string;
+  maxAmount: string;
   status: '' | TransactionStatus;
 }
 
@@ -62,6 +64,8 @@ export function TransactionsPage() {
     year: String(new Date().getFullYear()),
     startDate: '',
     endDate: '',
+    minAmount: '',
+    maxAmount: '',
     status: '',
   });
   const [page, setPage] = useState(1);
@@ -79,6 +83,8 @@ export function TransactionsPage() {
       year: filters.year || undefined,
       startDate: filters.startDate || undefined,
       endDate: filters.endDate || undefined,
+      minAmount: filters.minAmount || undefined,
+      maxAmount: filters.maxAmount || undefined,
       status: filters.status || undefined,
       page: page - 1,
       size: 10,
@@ -155,15 +161,35 @@ export function TransactionsPage() {
     [filters.endDate, filters.startDate],
   );
 
+  const fetchRowsForExport = useCallback(async () => {
+    const response = await api.get<PaginatedResponse<Transaction>>('/transactions', {
+      params: {
+        ...transactionParams,
+        page: 0,
+        size: 3000,
+      },
+    });
+
+    return response.data.content;
+  }, [transactionParams]);
+
   const handleExportExcel = useCallback(async () => {
     const { exportTransactionsExcel } = await import('../utils/exporters');
-    exportTransactionsExcel(currentRows);
-  }, [currentRows]);
+    try {
+      await exportTransactionsExcel(await fetchRowsForExport());
+    } catch (error) {
+      showToast(getErrorMessage(error, 'Não foi possível exportar as transações.'), 'error');
+    }
+  }, [fetchRowsForExport, showToast]);
 
   const handleExportPdf = useCallback(async () => {
     const { exportTransactionsPdf } = await import('../utils/exporters');
-    exportTransactionsPdf(currentRows, 'Relatório de Transações', periodLabel);
-  }, [currentRows, periodLabel]);
+    try {
+      await exportTransactionsPdf(await fetchRowsForExport(), 'Relatório de Transações', periodLabel);
+    } catch (error) {
+      showToast(getErrorMessage(error, 'Não foi possível exportar as transações.'), 'error');
+    }
+  }, [fetchRowsForExport, periodLabel, showToast]);
 
   return (
     <Stack spacing={3}>
@@ -254,6 +280,32 @@ export function TransactionsPage() {
                 <MenuItem value="PENDING">Pendente</MenuItem>
                 <MenuItem value="CANCELED">Cancelada</MenuItem>
               </TextField>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <TextField
+                fullWidth
+                label="Valor mínimo"
+                type="number"
+                value={filters.minAmount}
+                onChange={(event) => {
+                  setPage(1);
+                  setFilters((current) => ({ ...current, minAmount: event.target.value }));
+                }}
+                slotProps={{ htmlInput: { min: 0, step: '0.01' } }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <TextField
+                fullWidth
+                label="Valor máximo"
+                type="number"
+                value={filters.maxAmount}
+                onChange={(event) => {
+                  setPage(1);
+                  setFilters((current) => ({ ...current, maxAmount: event.target.value }));
+                }}
+                slotProps={{ htmlInput: { min: 0, step: '0.01' } }}
+              />
             </Grid>
           </Grid>
         </CardContent>

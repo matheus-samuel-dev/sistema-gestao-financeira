@@ -47,6 +47,8 @@ interface ReportFilters {
   categoryId: string;
   startDate: string;
   endDate: string;
+  minAmount: string;
+  maxAmount: string;
 }
 
 const monthOptions = Array.from({ length: 12 }, (_, index) => String(index + 1));
@@ -74,6 +76,8 @@ export function ReportsPage() {
     categoryId: '',
     startDate: '',
     endDate: '',
+    minAmount: '',
+    maxAmount: '',
   });
 
   const reportParams = useMemo(
@@ -84,6 +88,8 @@ export function ReportsPage() {
       categoryId: filters.categoryId || undefined,
       startDate: filters.startDate || undefined,
       endDate: filters.endDate || undefined,
+      minAmount: filters.minAmount || undefined,
+      maxAmount: filters.maxAmount || undefined,
     }),
     [filters],
   );
@@ -119,7 +125,7 @@ export function ReportsPage() {
       return;
     }
     const { exportReportExcel } = await import('../utils/exporters');
-    exportReportExcel(report);
+    await exportReportExcel(report);
   }, [report]);
 
   const handleExportPdf = useCallback(async () => {
@@ -127,7 +133,7 @@ export function ReportsPage() {
       return;
     }
     const { exportReportPdf } = await import('../utils/exporters');
-    exportReportPdf(report, periodLabel);
+    await exportReportPdf(report, periodLabel);
   }, [periodLabel, report]);
 
   return (
@@ -201,6 +207,26 @@ export function ReportsPage() {
                   </MenuItem>
                 ))}
               </TextField>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <TextField
+                fullWidth
+                label="Valor mínimo"
+                type="number"
+                value={filters.minAmount}
+                onChange={(event) => setFilters((current) => ({ ...current, minAmount: event.target.value }))}
+                slotProps={{ htmlInput: { min: 0, step: '0.01' } }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <TextField
+                fullWidth
+                label="Valor máximo"
+                type="number"
+                value={filters.maxAmount}
+                onChange={(event) => setFilters((current) => ({ ...current, maxAmount: event.target.value }))}
+                slotProps={{ htmlInput: { min: 0, step: '0.01' } }}
+              />
             </Grid>
           </Grid>
         </CardContent>

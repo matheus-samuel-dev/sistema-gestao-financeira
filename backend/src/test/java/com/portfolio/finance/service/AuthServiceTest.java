@@ -11,6 +11,7 @@ import com.portfolio.finance.domain.enums.AccountType;
 import com.portfolio.finance.domain.enums.ThemePreference;
 import com.portfolio.finance.domain.repository.UserRepository;
 import com.portfolio.finance.dto.auth.AuthResponse;
+import com.portfolio.finance.dto.auth.LoginRequest;
 import com.portfolio.finance.dto.auth.RegisterRequest;
 import com.portfolio.finance.dto.profile.UserProfileResponse;
 import com.portfolio.finance.exception.BusinessRuleException;
@@ -24,6 +25,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -115,5 +117,45 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.register(request))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("Já existe uma conta");
+    }
+
+    @Test
+    void loginAuthenticatesWithNormalizedEmailAndReturnsJwt() {
+        LoginRequest request = new LoginRequest(" MARIA@EMAIL.COM ", "123456");
+        User user = User.builder()
+                .id(1L)
+                .name("Maria Silva")
+                .email("maria@email.com")
+                .password("encoded")
+                .accountType(AccountType.PERSONAL)
+                .themePreference(ThemePreference.LIGHT)
+                .createdAt(OffsetDateTime.now())
+                .build();
+        UserDetails userDetails = org.springframework.security.core.userdetails.User
+                .withUsername("maria@email.com")
+                .password("encoded")
+                .authorities("USER")
+                .build();
+
+        when(userRepository.findByEmailIgnoreCase("maria@email.com")).thenReturn(java.util.Optional.of(user));
+        when(userDetailsService.loadUserByUsername("maria@email.com")).thenReturn(userDetails);
+        when(jwtService.generateToken(userDetails)).thenReturn("jwt-token");
+        when(userMapper.toProfile(user)).thenReturn(new UserProfileResponse(
+                1L,
+                "Maria Silva",
+                "maria@email.com",
+                AccountType.PERSONAL,
+                ThemePreference.LIGHT,
+                user.getCreatedAt()
+        ));
+
+        AuthResponse response = authService.login(request);
+
+        ArgumentCaptor<UsernamePasswordAuthenticationToken> authenticationCaptor =
+                ArgumentCaptor.forClass(UsernamePasswordAuthenticationToken.class);
+        verify(authenticationManager).authenticate(authenticationCaptor.capture());
+        assertThat(authenticationCaptor.getValue().getPrincipal()).isEqualTo("maria@email.com");
+        assertThat(authenticationCaptor.getValue().getCredentials()).isEqualTo("123456");
+        assertThat(response.token()).isEqualTo("jwt-token");
     }
 }

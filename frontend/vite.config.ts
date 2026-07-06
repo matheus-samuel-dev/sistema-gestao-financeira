@@ -1,8 +1,15 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.ts',
+    globals: true,
+    testTimeout: 15000,
+  },
   build: {
     rollupOptions: {
       output: {
@@ -32,22 +39,6 @@ export default defineConfig({
           if (id.indexOf('recharts') !== -1 || id.indexOf('d3-') !== -1) {
             return 'vendor-charts';
           }
-          if (id.indexOf('html2canvas') !== -1) {
-            return 'vendor-canvas';
-          }
-          if (id.indexOf('dompurify') !== -1) {
-            return 'vendor-purify';
-          }
-          if (id.indexOf('jspdf-autotable') !== -1) {
-            return 'vendor-pdf-table';
-          }
-          if (id.indexOf('jspdf') !== -1) {
-            return 'vendor-pdf';
-          }
-          if (id.indexOf('xlsx') !== -1) {
-            return 'vendor-xlsx';
-          }
-
           return undefined;
         },
       },

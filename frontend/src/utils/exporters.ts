@@ -1,15 +1,26 @@
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
 import type { ReportData, Transaction } from '../types/models';
 import { formatCurrency, formatDate } from './formatters';
 import { transactionStatusLabels, transactionTypeLabels } from './labels';
 
-function downloadWorkbook(workbook: XLSX.WorkBook, fileName: string) {
+async function createPdfDocument() {
+  const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+    import('jspdf'),
+    import('jspdf-autotable'),
+  ]);
+
+  return {
+    autoTable,
+    doc: new jsPDF(),
+  };
+}
+
+async function downloadWorkbook(workbook: import('xlsx').WorkBook, fileName: string) {
+  const XLSX = await import('xlsx');
   XLSX.writeFile(workbook, fileName);
 }
 
-export function exportTransactionsExcel(transactions: Transaction[]) {
+export async function exportTransactionsExcel(transactions: Transaction[]) {
+  const XLSX = await import('xlsx');
   const rows = transactions.map((transaction) => ({
     Descrição: transaction.description,
     Tipo: transactionTypeLabels[transaction.type],
@@ -25,11 +36,11 @@ export function exportTransactionsExcel(transactions: Transaction[]) {
   const workbook = XLSX.utils.book_new();
   const worksheet = XLSX.utils.json_to_sheet(rows);
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Transações');
-  downloadWorkbook(workbook, 'transacoes-finance-flow.xlsx');
+  await downloadWorkbook(workbook, 'transacoes-finance-flow.xlsx');
 }
 
-export function exportTransactionsPdf(transactions: Transaction[], title: string, periodLabel: string) {
-  const doc = new jsPDF();
+export async function exportTransactionsPdf(transactions: Transaction[], title: string, periodLabel: string) {
+  const { autoTable, doc } = await createPdfDocument();
 
   doc.setFontSize(18);
   doc.text(title, 14, 18);
@@ -60,7 +71,8 @@ export function exportTransactionsPdf(transactions: Transaction[], title: string
   doc.save('transacoes-finance-flow.pdf');
 }
 
-export function exportReportExcel(report: ReportData) {
+export async function exportReportExcel(report: ReportData) {
+  const XLSX = await import('xlsx');
   const workbook = XLSX.utils.book_new();
 
   const summarySheet = XLSX.utils.json_to_sheet([
@@ -87,11 +99,11 @@ export function exportReportExcel(report: ReportData) {
   XLSX.utils.book_append_sheet(workbook, expenseSheet, 'Despesas por Categoria');
   XLSX.utils.book_append_sheet(workbook, topExpensesSheet, 'Maiores Despesas');
 
-  downloadWorkbook(workbook, 'relatorio-finance-flow.xlsx');
+  await downloadWorkbook(workbook, 'relatorio-finance-flow.xlsx');
 }
 
-export function exportReportPdf(report: ReportData, periodLabel: string) {
-  const doc = new jsPDF();
+export async function exportReportPdf(report: ReportData, periodLabel: string) {
+  const { autoTable, doc } = await createPdfDocument();
 
   doc.setFontSize(18);
   doc.text('Relatório Financeiro', 14, 18);
@@ -112,8 +124,8 @@ export function exportReportPdf(report: ReportData, periodLabel: string) {
   });
 
   autoTable(doc, {
-    startY: (doc as jsPDF & { lastAutoTable?: { finalY?: number } }).lastAutoTable?.finalY
-      ? ((doc as jsPDF & { lastAutoTable?: { finalY?: number } }).lastAutoTable?.finalY ?? 70) + 10
+    startY: (doc as { lastAutoTable?: { finalY?: number } }).lastAutoTable?.finalY
+      ? ((doc as { lastAutoTable?: { finalY?: number } }).lastAutoTable?.finalY ?? 70) + 10
       : 110,
     head: [['Descrição', 'Categoria', 'Valor', 'Data']],
     body: report.topExpenses.map((expense) => [

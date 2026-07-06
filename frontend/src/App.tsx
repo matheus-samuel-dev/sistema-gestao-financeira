@@ -2,8 +2,8 @@ import { CircularProgress, Stack } from '@mui/material';
 import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
-import { AppShell } from './components/layout/AppShell';
 
+const AppShell = lazy(() => import('./components/layout/AppShell').then((module) => ({ default: module.AppShell })));
 const DashboardPage = lazy(() => import('./pages/DashboardPage').then((module) => ({ default: module.DashboardPage })));
 const LandingPage = lazy(() => import('./pages/LandingPage').then((module) => ({ default: module.LandingPage })));
 const LoginPage = lazy(() => import('./pages/LoginPage').then((module) => ({ default: module.LoginPage })));

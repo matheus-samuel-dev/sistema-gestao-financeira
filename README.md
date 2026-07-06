@@ -1,195 +1,184 @@
-# 💰 Sistema de Gestão Financeira
+# Finance Flow Pro
 
-> Sistema Full Stack de Gestão Financeira desenvolvido com **Java,
-> Spring Boot, React, PostgreSQL e Docker**, simulando uma aplicação
-> corporativa para controle de receitas, despesas e indicadores
-> financeiros.
+Sistema full stack de gestao financeira para portfolio, com backend em Spring Boot Java 21, frontend em React TypeScript e banco PostgreSQL.
 
-![Java](https://img.shields.io/badge/Java-21-orange?style=for-the-badge&logo=openjdk)
-![Spring
-Boot](https://img.shields.io/badge/Spring_Boot-3.x-6DB33F?style=for-the-badge&logo=springboot)
-![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=for-the-badge&logo=postgresql)
-![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker)
-![JWT](https://img.shields.io/badge/Auth-JWT-black?style=for-the-badge)
+## Stack
 
-------------------------------------------------------------------------
+- Backend: Java 21, Spring Boot 3.5, Spring Security, JWT, BCrypt, Spring Data JPA, Flyway, Bean Validation, Swagger/OpenAPI.
+- Frontend: React 19, TypeScript, Vite, Material UI, Axios, Recharts, jsPDF, XLSX.
+- Banco: PostgreSQL.
+- Qualidade: JUnit 5, Mockito, Spring Security Test, Vitest, Testing Library, ESLint, GitHub Actions.
+- Infra: Docker, Docker Compose, Nginx.
 
-## 📚 Sobre
+## Funcionalidades
 
-Aplicação Full Stack para gerenciamento financeiro pessoal e
-empresarial. O sistema permite controlar receitas, despesas, categorias,
-dashboards, relatórios e indicadores, utilizando arquitetura em camadas,
-autenticação JWT e interface moderna.
+- Autenticacao e sessao com JWT.
+- Dashboard financeiro com KPIs, graficos e ultimas movimentacoes.
+- CRUD de transacoes, categorias, metas e recorrencias.
+- Relatorios financeiros com comparativos mensais e ranking de despesas.
+- Exportacao PDF/Excel.
+- Filtros por periodo, tipo, categoria, status e faixa de valor.
+- Tema claro/escuro e layout responsivo.
 
-## ✨ Funcionalidades
+## Arquitetura
 
--   Login e autenticação JWT
--   Dashboard financeiro
--   Controle de receitas
--   Controle de despesas
--   Categorias financeiras
--   Relatórios e gráficos
--   Pesquisa e filtros
--   Exportação de dados
--   Swagger/OpenAPI
--   Docker Compose
-
-## 🏗️ Arquitetura
-
-``` text
-React
-  │
-Axios
-  │
-Spring Boot
-  │
-Spring Security + JWT
-  │
-Services
-  │
-Repositories (JPA)
-  │
-PostgreSQL
+```text
+React + Vite
+  -> Axios client
+  -> Spring Security + JWT filter
+  -> Controllers REST
+  -> Services com regras de negocio
+  -> Repositories Spring Data JPA
+  -> PostgreSQL
 ```
 
-## 🛠️ Tecnologias
+O backend usa services para centralizar regras de negocio e garantir propriedade dos recursos por usuario. Repositories usam JPA Specifications para filtros dinamicos. O frontend consome a API por um cliente Axios compartilhado, com interceptadores para token e expiracao de sessao.
+
+## Banco e migrations
+
+O projeto usa Flyway para versionamento do banco.
+
+- `spring.jpa.hibernate.ddl-auto=validate`
+- Migrations em `backend/src/main/resources/db/migration`
+- Migration inicial: `V1__initial_schema.sql`
+
+Essa decisao remove a dependencia de `ddl-auto: update`, evitando alteracoes implicitas de schema em ambientes de producao.
+
+## Seguranca
+
+- Senhas com BCrypt.
+- API stateless com JWT.
+- Rotas internas protegidas por Spring Security.
+- Validacao de dados com Bean Validation.
+- Propriedade dos recursos garantida por consultas `findByIdAndUser` e filtros por usuario.
+- Handler global retorna mensagens amigaveis e registra excecoes inesperadas com stack trace no log.
+
+### Decisao sobre armazenamento do JWT
+
+Atualmente o frontend mantem o JWT em `localStorage` por simplicidade operacional e por ser adequado ao escopo de portfolio/demo. O risco principal e exposicao em caso de XSS. Mitigacoes atuais:
+
+- React escapa conteudo por padrao.
+- Sem uso de HTML arbitrario em inputs do usuario.
+- Tokens sao removidos em 401/403.
+- Axios redireciona para login em sessao expirada.
+
+Para um SaaS real em producao, a evolucao recomendada e migrar para cookie `httpOnly`, `Secure`, `SameSite=Lax/Strict`, com estrategia de CSRF adequada.
+
+## Performance
+
+Melhorias aplicadas:
+
+- `buildCategoryBreakdown` deixou de fazer busca repetida O(n²) e passou a agregar por `Map` em uma passada.
+- Comparacao mensal de relatorios agrupa transacoes por mes antes de calcular os totais.
+- Indices de banco adicionados para consultas por usuario, data, tipo e valor.
+- Frontend usa lazy loading de paginas e chunks separados no Vite.
+
+## Testes
 
 ### Backend
 
--   Java 21
--   Spring Boot
--   Spring Security
--   Spring Data JPA
--   Hibernate
--   JWT
--   Flyway
--   Bean Validation
--   Swagger/OpenAPI
+```bash
+cd backend
+mvn test
+```
+
+Cobertura adicionada para:
+
+- Autenticacao e normalizacao de e-mail.
+- JWT valido/invalido.
+- Regras de categoria.
+- Propriedade de recursos por usuario.
+- Transacoes.
+- Metas financeiras.
+- Dashboard.
+- Relatorios.
+- Transacoes canceladas fora de totais financeiros.
+- Filtros por faixa de valor.
 
 ### Frontend
 
--   React
--   Vite
--   Material UI
--   Axios
--   Recharts
-
-### Banco de Dados
-
--   PostgreSQL
-
-### Infraestrutura
-
--   Docker
--   Docker Compose
--   Nginx
-
-## 📂 Estrutura
-
-``` text
-gestao-financeira/
-├── backend/
-├── frontend/
-├── docker-compose.yml
-└── README.md
+```bash
+cd frontend
+npm ci
+npm run lint
+npm run test:run
+npm run build
 ```
 
-## ▶️ Como executar
+Cobertura adicionada para:
 
-``` bash
-git clone https://github.com/matheus-samuel-dev/sistema-gestao-financeira.git
-cd sistema-gestao-financeira
+- Login e validacao de formulario.
+- Interceptor Axios para 401/403.
+- Dashboard e filtros.
+- Listagem de transacoes.
+- Exportacao respeitando filtros aplicados.
+- Feedbacks de erro em formulario.
+
+## Execucao local
+
+### Com Docker
+
+```bash
 docker compose up --build
 ```
 
-Ou execute frontend e backend separadamente.
+### Backend local
 
-## 📊 Dashboard
+```bash
+cd backend
+mvn spring-boot:run
+```
 
--   Saldo atual
--   Receitas do mês
--   Despesas do mês
--   Evolução do saldo
--   Receitas × Despesas
--   Despesas por categoria
--   Últimas movimentações
+Variaveis principais:
 
-## 🔐 Segurança
+```env
+DB_URL=jdbc:postgresql://localhost:5432/finance_management
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+JWT_SECRET=replace-this-secret-with-at-least-256-bits
+JWT_EXPIRATION_HOURS=24
+CORS_ALLOWED_ORIGINS=http://localhost:5176,http://127.0.0.1:5176
+```
 
--   Spring Security
--   JWT
--   Rotas protegidas
--   Validação de dados
--   Tratamento centralizado de exceções
+Swagger:
 
-## 📡 Swagger
-
-``` text
+```text
 http://localhost:8080/swagger-ui.html
 ```
 
-## 📸 Screenshots
+### Frontend local
 
-### 🏠 1. Login
+```bash
+cd frontend
+npm ci
+npm run dev
+```
 
-Tela inicial da aplicação, com acesso seguro através de autenticação JWT.
+URL padrao:
 
-<p align="center">
-  <img src="./screenshots/Login_gestãoFinanceira.png" alt="Tela de Login" width="100%">
-</p>
+```text
+http://localhost:5176
+```
 
----
+## Producao
 
-### 📊 2. Dashboard
+Checklist recomendado:
 
-Visão geral das finanças com indicadores, gráficos, fluxo de caixa e resumo das principais métricas.
+- Definir `JWT_SECRET` forte via variavel de ambiente.
+- Usar PostgreSQL gerenciado ou container persistente com volume.
+- Rodar migrations Flyway no start da API.
+- Configurar `CORS_ALLOWED_ORIGINS` apenas com dominios confiaveis.
+- Servir frontend estatico via Nginx/CDN.
+- Migrar JWT para cookie `httpOnly` em ambiente SaaS real.
+- Habilitar observabilidade de logs e metricas.
 
-<p align="center">
-  <img src="./screenshots/Dashboard_gestãoFinanceira.png" alt="Dashboard Financeiro" width="100%">
-</p>
+## CI/CD
 
----
+GitHub Actions em `.github/workflows/ci.yml` executa:
 
-### 💸 3. Transações
+- Backend: Java 21 + `mvn test`.
+- Frontend: Node 22 + `npm ci`, `npm run lint`, `npm run test:run`, `npm run build`.
 
-Gerenciamento completo de receitas e despesas, com filtros, paginação, exportação para PDF/Excel e operações de edição e exclusão.
+## Licenca
 
-<p align="center">
-  <img src="./screenshots/Transacoes_gestãoFinanceira.png" alt="Gestão de Transações" width="100%">
-</p>
-
----
-
-### 🎯 4. Metas
-
-Acompanhamento de metas financeiras, progresso, valores acumulados e objetivos planejados.
-
-<p align="center">
-  <img src="./screenshots/Metas_gestãoFinanceira.png" alt="Metas Financeiras" width="100%">
-</p>
-
-## 🚀 Roadmap
-
--   [x] Dashboard
--   [x] CRUD de Receitas
--   [x] CRUD de Despesas
--   [x] Categorias
--   [x] Docker
--   [x] Swagger
--   [ ] Metas Financeiras
--   [ ] Notificações
--   [ ] Aplicativo Mobile
-
-## 👨‍💻 Autor
-
-**Matheus Samuel**
-
--   GitHub: https://github.com/matheus-samuel-dev
--   LinkedIn: https://linkedin.com/in/matheus-samuel-dev
--   Portfólio: https://matheus-samuel-dev.github.io/Portfolio/
-
-## 📄 Licença
-
-Projeto desenvolvido para fins de estudo, demonstração técnica e
-portfólio.
+Projeto desenvolvido para estudo, demonstracao tecnica e portfolio.

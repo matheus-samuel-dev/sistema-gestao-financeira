@@ -4,14 +4,14 @@ import {
   Box,
   Button,
   Card,
-  Container,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
@@ -26,6 +26,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login } = useAuth();
   const { showToast } = useToast();
   const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginFormValues>({
@@ -35,6 +36,12 @@ export function LoginPage() {
       password: '123456',
     },
   });
+
+  useEffect(() => {
+    if (searchParams.get('sessionExpired') === '1') {
+      showToast('Sua sessão expirou. Entre novamente para continuar.', 'info');
+    }
+  }, [searchParams, showToast]);
 
   const submit = handleSubmit(async (values) => {
     try {
@@ -49,22 +56,33 @@ export function LoginPage() {
   return (
     <Box
       sx={{
-        minHeight: '100vh',
+        minHeight: '100svh',
         background:
           'radial-gradient(circle at top left, rgba(14,116,144,0.22), transparent 28%), radial-gradient(circle at bottom right, rgba(249,115,22,0.18), transparent 24%), linear-gradient(180deg, #041420 0%, #0E1726 100%)',
         display: 'flex',
         alignItems: 'center',
+        overflowY: 'auto',
+        py: { xs: 2, sm: 4 },
       }}
     >
-      <Container maxWidth="sm">
-        <Card sx={{ p: { xs: 3, md: 4 }, borderRadius: '24px', boxShadow: '0 28px 70px rgba(2, 12, 27, 0.35)' }}>
-          <Stack spacing={3}>
+      <Box sx={{ boxSizing: 'border-box', display: 'flex', justifyContent: 'center', width: '100%', px: { xs: 1.5, sm: 2 } }}>
+        <Card
+          sx={{
+            boxSizing: 'border-box',
+            width: '100%',
+            maxWidth: 480,
+            p: { xs: 2, sm: 3, md: 4 },
+            borderRadius: { xs: '18px', sm: '24px' },
+            boxShadow: '0 28px 70px rgba(2, 12, 27, 0.35)',
+          }}
+        >
+          <Stack spacing={{ xs: 2, sm: 3 }}>
             <Stack spacing={1.2} alignItems="flex-start">
               <Box
                 sx={{
-                  width: 54,
-                  height: 54,
-                  borderRadius: '16px',
+                  width: { xs: 46, sm: 54 },
+                  height: { xs: 46, sm: 54 },
+                  borderRadius: { xs: '14px', sm: '16px' },
                   display: 'grid',
                   placeItems: 'center',
                   bgcolor: alpha('#0E7490', 0.14),
@@ -73,8 +91,10 @@ export function LoginPage() {
               >
                 <AutoGraphRoundedIcon />
               </Box>
-              <Typography variant="h4">Entrar na sua operação</Typography>
-              <Typography color="text.secondary" variant="body1">
+              <Typography variant="h4" sx={{ fontSize: { xs: 26, sm: 34 }, lineHeight: 1.12 }}>
+                Entrar na sua operação
+              </Typography>
+              <Typography color="text.secondary" variant="body1" sx={{ fontSize: { xs: 14, sm: 16 }, lineHeight: 1.55 }}>
                 Use a conta demo ou acesse seu ambiente privado para controlar fluxo de caixa, metas e relatórios.
               </Typography>
             </Stack>
@@ -101,7 +121,7 @@ export function LoginPage() {
                 )}
               />
             </Stack>
-            <Button disabled={isSubmitting} onClick={() => void submit()} size="large" variant="contained">
+            <Button disabled={isSubmitting} fullWidth onClick={() => void submit()} size="large" variant="contained">
               Entrar
             </Button>
             <Typography color="text.secondary" variant="body2">
@@ -112,7 +132,7 @@ export function LoginPage() {
             </Typography>
           </Stack>
         </Card>
-      </Container>
+      </Box>
     </Box>
   );
 }
