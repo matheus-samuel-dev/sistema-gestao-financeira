@@ -101,43 +101,9 @@ select {
   font-weight: 800;
 }
 
-.login-brand-icon,
-.login-mark {
-  display: grid;
-  place-items: center;
-  color: #ffffff;
-}
-
 .login-brand-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #0ea5c6, #0e7490);
-  box-shadow: 0 14px 30px rgba(14, 116, 144, 0.32);
-}
-
-.login-brand-icon span,
-.login-mark span {
-  width: 22px;
-  height: 16px;
-  border-left: 3px solid currentColor;
-  border-bottom: 3px solid currentColor;
-  border-radius: 0 0 0 4px;
-  position: relative;
-}
-
-.login-brand-icon span::after,
-.login-mark span::after {
-  content: "";
-  position: absolute;
-  left: 3px;
-  right: -2px;
-  bottom: 3px;
-  height: 13px;
-  border-top: 3px solid currentColor;
-  border-right: 3px solid currentColor;
-  transform: skewY(-26deg);
-  transform-origin: left bottom;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 14px 18px rgba(14, 116, 144, 0.24));
 }
 
 .login-showcase-copy {
@@ -281,11 +247,8 @@ select {
 }
 
 .login-mark {
-  width: 54px;
-  height: 54px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #0ea5c6, #0e7490);
-  box-shadow: 0 14px 30px rgba(14, 116, 144, 0.2);
+  flex: 0 0 auto;
+  filter: drop-shadow(0 12px 18px rgba(14, 116, 144, 0.2));
 }
 
 .login-copy {
@@ -449,7 +412,6 @@ select {
   .login-mark {
     width: 46px;
     height: 46px;
-    border-radius: 14px;
   }
 
   .login-copy h2 {

@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router-dom';
+import { BrandMark } from '../components/BrandMark';
 import { useAuth } from '../contexts/AuthContext';
 import { getApiDebugInfo, getLoginErrorMessage } from '../utils/apiError';
 
@@ -71,9 +72,7 @@ export function LoginPage() {
       <div className="login-shell">
         <section className="login-showcase" aria-label="Finance Flow Pro">
           <RouterLink className="login-brand" to="/" aria-label="Finance Flow Pro">
-            <span className="login-brand-icon" aria-hidden>
-              <span />
-            </span>
+            <BrandMark className="login-brand-icon" size={44} />
             <span>Finance Flow Pro</span>
           </RouterLink>
 
@@ -113,9 +112,7 @@ export function LoginPage() {
 
         <section aria-labelledby="login-title" className="login-card">
           <div className="login-card-top">
-            <div className="login-mark" aria-hidden>
-              <span />
-            </div>
+            <BrandMark className="login-mark" size={54} />
             <span>Bem-vindo de volta</span>
           </div>
 

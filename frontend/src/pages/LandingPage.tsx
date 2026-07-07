@@ -21,6 +21,7 @@ import {
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { Link as RouterLink } from 'react-router-dom';
+import { BrandMark } from '../components/BrandMark';
 
 const highlights = [
   {
@@ -57,10 +58,11 @@ function DashboardMockup() {
       aria-hidden
       sx={{
         position: 'absolute',
-        inset: { xs: 'auto -120px 24px 28px', md: '112px -86px 42px auto', xl: '96px -20px 42px auto' },
-        width: { xs: 520, md: 640, xl: 720 },
+        display: { xs: 'none', md: 'block' },
+        inset: { md: '112px -86px 42px auto', xl: '96px -20px 42px auto' },
+        width: { md: 600, lg: 640, xl: 720 },
         maxWidth: '86vw',
-        opacity: { xs: 0.3, md: 0.62, xl: 0.7 },
+        opacity: { md: 0.56, xl: 0.7 },
         transform: { xs: 'rotate(-2deg)', md: 'rotate(-3deg)' },
         transformOrigin: 'center',
       }}
@@ -78,9 +80,7 @@ function DashboardMockup() {
         <Stack spacing={2}>
           <Stack direction="row" justifyContent="space-between" alignItems="center">
             <Stack direction="row" spacing={1.2} alignItems="center">
-              <Avatar variant="rounded" sx={{ bgcolor: '#0E7490', borderRadius: '14px' }}>
-                <AutoGraphRoundedIcon />
-              </Avatar>
+              <BrandMark size={44} />
               <Box>
                 <Typography color="#FFFFFF" fontWeight={800}>
                   Finance Flow Pro
@@ -152,7 +152,7 @@ export function LandingPage() {
         component="section"
         sx={{
           position: 'relative',
-          minHeight: { xs: '86vh', md: '88vh' },
+          minHeight: { xs: 'auto', md: '88vh' },
           overflow: 'hidden',
           color: '#FFFFFF',
           background:
@@ -160,25 +160,54 @@ export function LandingPage() {
         }}
       >
         <DashboardMockup />
-        <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 1, py: { xs: 3, md: 4 } }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
+        <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 1, py: { xs: 2, sm: 3, md: 4 }, pb: { xs: 5, md: 4 } }}>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            justifyContent="space-between"
+            alignItems={{ xs: 'stretch', sm: 'center' }}
+            spacing={{ xs: 1.5, sm: 2 }}
+          >
             <Stack direction="row" spacing={1.2} alignItems="center">
-              <Avatar variant="rounded" sx={{ bgcolor: '#0E7490', borderRadius: '14px' }}>
-                <AutoGraphRoundedIcon />
-              </Avatar>
-              <Typography fontWeight={900}>Finance Flow Pro</Typography>
+              <BrandMark size={40} />
+              <Typography fontWeight={900} sx={{ fontSize: { xs: 16, sm: 18 }, whiteSpace: 'nowrap' }}>
+                Finance Flow Pro
+              </Typography>
             </Stack>
-            <Stack direction="row" spacing={1}>
-              <Button component={RouterLink} to="/login" color="inherit" variant="outlined">
+            <Stack direction="row" spacing={1} sx={{ width: { xs: '100%', sm: 'auto' } }}>
+              <Button
+                component={RouterLink}
+                to="/login"
+                color="inherit"
+                variant="outlined"
+                sx={{
+                  flex: { xs: 1, sm: 'initial' },
+                  minHeight: 42,
+                  minWidth: { xs: 0, sm: 88 },
+                  px: { xs: 1.5, sm: 2 },
+                  whiteSpace: 'nowrap',
+                }}
+              >
                 Login
               </Button>
-              <Button component={RouterLink} to="/cadastro" color="secondary" variant="contained">
+              <Button
+                component={RouterLink}
+                to="/cadastro"
+                color="secondary"
+                variant="contained"
+                sx={{
+                  flex: { xs: 1.25, sm: 'initial' },
+                  minHeight: 42,
+                  minWidth: { xs: 0, sm: 120 },
+                  px: { xs: 1.5, sm: 2 },
+                  whiteSpace: 'nowrap',
+                }}
+              >
                 Criar conta
               </Button>
             </Stack>
           </Stack>
 
-          <Stack spacing={3} sx={{ maxWidth: 760, pt: { xs: 9, md: 13 } }}>
+          <Stack spacing={{ xs: 2, md: 3 }} sx={{ maxWidth: 760, pt: { xs: 5, sm: 7, md: 13 } }}>
             <Chip
               icon={<BoltRoundedIcon />}
               label="SaaS financeiro full stack"
@@ -192,18 +221,18 @@ export function LandingPage() {
             <Typography
               variant="h1"
               sx={{
-                fontSize: { xs: 42, sm: 54, md: 72 },
+                fontSize: { xs: 34, sm: 46, md: 72 },
                 maxWidth: 640,
                 textShadow: '0 16px 42px rgba(0,0,0,0.25)',
               }}
             >
               Finance Flow Pro
             </Typography>
-            <Typography sx={{ color: alpha('#FFFFFF', 0.84), fontSize: { xs: 17, md: 20 }, maxWidth: 610 }}>
+            <Typography sx={{ color: alpha('#FFFFFF', 0.84), fontSize: { xs: 15.5, sm: 17, md: 20 }, maxWidth: 610 }}>
               Plataforma para organizar caixa, metas, categorias, recorrências e relatórios com a clareza visual de um
               produto pronto para empresas.
             </Typography>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.2} sx={{ width: { xs: '100%', sm: 'auto' } }}>
               <Button
                 component={RouterLink}
                 to="/cadastro"
@@ -211,10 +240,18 @@ export function LandingPage() {
                 color="secondary"
                 size="large"
                 endIcon={<ArrowForwardRoundedIcon />}
+                sx={{ minHeight: 48, whiteSpace: 'nowrap' }}
               >
                 Criar conta demo
               </Button>
-              <Button component={RouterLink} to="/login" variant="outlined" color="inherit" size="large">
+              <Button
+                component={RouterLink}
+                to="/login"
+                variant="outlined"
+                color="inherit"
+                size="large"
+                sx={{ minHeight: 48, whiteSpace: 'nowrap' }}
+              >
                 Ver ambiente
               </Button>
             </Stack>
@@ -228,7 +265,11 @@ export function LandingPage() {
             <Typography color="primary.main" fontWeight={800} variant="body2">
               VISÃO DE PRODUTO
             </Typography>
-            <Typography color="#0F172A" variant="h3">
+            <Typography
+              color="#0F172A"
+              variant="h3"
+              sx={{ fontSize: { xs: 32, sm: 40, md: 48 }, lineHeight: { xs: 1.12, md: 1.16 } }}
+            >
               Gestão financeira com leitura rápida e acabamento comercial.
             </Typography>
             <Typography color="text.secondary" variant="body1">

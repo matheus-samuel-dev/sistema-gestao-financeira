@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { api } from '../api/client';
+import { DEMO_TOKEN } from '../data/demoSession';
 import { ToastProvider } from '../contexts/ToastContext';
 import { DashboardPage } from './DashboardPage';
 
@@ -31,6 +32,7 @@ const dashboardData = {
 
 describe('DashboardPage', () => {
   beforeEach(() => {
+    localStorage.clear();
     vi.restoreAllMocks();
     vi.spyOn(api, 'get').mockImplementation((url) => {
       if (url === '/categories') {
@@ -84,5 +86,19 @@ describe('DashboardPage', () => {
         }),
       }));
     });
+  });
+
+  it('loads local demo data without calling the API when the demo token is stored', async () => {
+    localStorage.setItem('finance-flow-token', DEMO_TOKEN);
+
+    render(
+      <ToastProvider>
+        <DashboardPage />
+      </ToastProvider>,
+    );
+
+    expect(await screen.findByText('Panorama financeiro')).toBeInTheDocument();
+    expect(await screen.findAllByText('R$ 71.460,00')).toHaveLength(2);
+    expect(api.get).not.toHaveBeenCalled();
   });
 });

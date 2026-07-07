@@ -1,5 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
+import {
+  createDemoInvalidCredentialsError,
+  DEMO_AUTH_RESPONSE,
+  isDemoCredentials,
+  isDemoEmail,
+  normalizeDemoEmail,
+} from '../data/demoSession';
 import type { AuthResponse, LoginRequest, RegisterRequest, ThemePreference, UserProfile } from '../types/session';
 import { getErrorMessage } from '../utils/apiError';
 import {
@@ -64,6 +71,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = useCallback(async (payload: LoginRequest, options?: AuthRequestOptions) => {
+    const normalizedEmail = normalizeDemoEmail(payload.email);
+
+    if (isDemoEmail(normalizedEmail)) {
+      if (!isDemoCredentials(normalizedEmail, payload.password)) {
+        throw createDemoInvalidCredentialsError();
+      }
+
+      console.info('[Auth] Login demo local concluído sem depender da API externa.', {
+        email: normalizedEmail,
+      });
+      persistSession(DEMO_AUTH_RESPONSE);
+      setSession({ token: DEMO_AUTH_RESPONSE.token, user: DEMO_AUTH_RESPONSE.user });
+      return;
+    }
+
     const { data } = await api.post<AuthResponse>('/auth/login', payload, { signal: options?.signal });
     persistSession(data);
     setSession({ token: data.token, user: data.user });

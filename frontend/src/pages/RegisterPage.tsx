@@ -1,5 +1,3 @@
-import AutoGraphRoundedIcon from '@mui/icons-material/AutoGraphRounded';
-import { alpha } from '@mui/material/styles';
 import {
   Box,
   Button,
@@ -14,6 +12,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
+import { BrandMark } from '../components/BrandMark';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { getErrorMessage } from '../utils/apiError';
@@ -69,14 +68,11 @@ export function RegisterPage() {
                 sx={{
                   width: 54,
                   height: 54,
-                  borderRadius: '16px',
                   display: 'grid',
                   placeItems: 'center',
-                  bgcolor: alpha('#F97316', 0.16),
-                  color: '#F97316',
                 }}
               >
-                <AutoGraphRoundedIcon />
+                <BrandMark size={54} />
               </Box>
               <Typography variant="h4">Criar uma conta elegante e segura</Typography>
               <Typography color="text.secondary" variant="body1">

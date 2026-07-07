@@ -1,4 +1,5 @@
 import axios, { type AxiosError } from 'axios';
+import { isDemoInvalidCredentialsError } from '../data/demoSession';
 import type { ApiError } from '../types/models';
 
 export function getErrorMessage(error: unknown, fallback = 'Não foi possível concluir a operação.') {
@@ -11,6 +12,10 @@ function isTimeoutOrCanceled(error: AxiosError<ApiError>) {
 }
 
 export function getLoginErrorMessage(error: unknown) {
+  if (isDemoInvalidCredentialsError(error)) {
+    return 'E-mail ou senha inválidos. Confira os dados e tente novamente.';
+  }
+
   if (!axios.isAxiosError<ApiError>(error)) {
     return 'Não foi possível entrar agora. Tente novamente em instantes.';
   }
@@ -35,6 +40,10 @@ export function getLoginErrorMessage(error: unknown) {
 }
 
 export function getApiDebugInfo(error: unknown) {
+  if (isDemoInvalidCredentialsError(error)) {
+    return { code: 'DEMO_INVALID_CREDENTIALS', message: 'Credenciais demo inválidas.' };
+  }
+
   if (!axios.isAxiosError<ApiError>(error)) {
     return { message: error instanceof Error ? error.message : String(error) };
   }

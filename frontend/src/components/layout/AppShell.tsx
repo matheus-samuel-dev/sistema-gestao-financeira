@@ -30,6 +30,7 @@ import {
 import { alpha, useTheme } from '@mui/material/styles';
 import { useMemo, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { BrandMark } from '../BrandMark';
 import { useAuth } from '../../contexts/AuthContext';
 import { useColorMode } from '../../theme/ColorModeContext';
 
@@ -72,12 +73,7 @@ export function AppShell() {
         }}
       >
         <Stack direction="row" spacing={1.4} alignItems="center" minWidth={0}>
-          <Avatar
-            variant="rounded"
-            sx={{ bgcolor: theme.palette.primary.main, width: 42, height: 42, borderRadius: '14px' }}
-          >
-            <AutoGraphRoundedIcon />
-          </Avatar>
+          <BrandMark size={42} />
           <Box minWidth={0}>
             <Typography variant="h6" sx={{ fontSize: 18 }}>
               Finance Flow Pro

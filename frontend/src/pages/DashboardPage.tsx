@@ -38,10 +38,12 @@ import { EmptyState } from '../components/EmptyState';
 import { IconBadge } from '../components/IconBadge';
 import { SectionHeader } from '../components/SectionHeader';
 import { StatCard } from '../components/StatCard';
+import { DEMO_CATEGORIES, DEMO_DASHBOARD_DATA, isDemoToken } from '../data/demoSession';
 import type { Category, DashboardData, TransactionType } from '../types/models';
 import { getErrorMessage } from '../utils/apiError';
 import { formatCompactCurrency, formatCurrency, formatDate, formatPercentage } from '../utils/formatters';
 import { useToast } from '../contexts/ToastContext';
+import { getStoredToken } from '../utils/sessionStorage';
 
 interface FilterState {
   month: string;
@@ -89,6 +91,7 @@ export function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const dashboardAbortRef = useRef<AbortController | null>(null);
   const manualRefreshInFlightRef = useRef(false);
+  const isDemoMode = isDemoToken(getStoredToken());
 
   const dashboardParams = useMemo(
     () => ({
@@ -105,9 +108,20 @@ export function DashboardPage() {
   );
 
   const fetchCategories = useCallback(async () => {
-    const response = await api.get<Category[]>('/categories', { params: { activeOnly: true } });
-    setCategories(response.data);
-  }, []);
+    if (isDemoMode) {
+      setCategories(DEMO_CATEGORIES);
+      return;
+    }
+
+    try {
+      const response = await api.get<Category[]>('/categories', { params: { activeOnly: true } });
+      setCategories(response.data);
+    } catch (error) {
+      if (!isCanceledRequest(error)) {
+        console.error('[Dashboard] Não foi possível carregar categorias.', error);
+      }
+    }
+  }, [isDemoMode]);
 
   const fetchDashboard = useCallback(async (options?: { showSuccess?: boolean }) => {
     if (options?.showSuccess && manualRefreshInFlightRef.current) {
@@ -124,6 +138,15 @@ export function DashboardPage() {
 
     setLoading(true);
     try {
+      if (isDemoMode) {
+        setCategories(DEMO_CATEGORIES);
+        setData(DEMO_DASHBOARD_DATA);
+        if (options?.showSuccess) {
+          showToast('Dashboard demo atualizado com sucesso.', 'success');
+        }
+        return;
+      }
+
       const response = await api.get<DashboardData>('/dashboard', {
         params: dashboardParams,
         signal: controller.signal,
@@ -147,7 +170,7 @@ export function DashboardPage() {
         manualRefreshInFlightRef.current = false;
       }
     }
-  }, [dashboardParams, showToast]);
+  }, [dashboardParams, isDemoMode, showToast]);
 
   useEffect(() => {
     void fetchCategories();
