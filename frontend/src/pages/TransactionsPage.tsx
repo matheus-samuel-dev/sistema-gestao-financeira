@@ -25,13 +25,13 @@ import {
   useTheme,
 } from '@mui/material';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { api } from '../api/client';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { EmptyState } from '../components/EmptyState';
 import { TransactionFormDialog } from '../components/forms/TransactionFormDialog';
 import { IconBadge } from '../components/IconBadge';
 import { SectionHeader } from '../components/SectionHeader';
 import { useToast } from '../contexts/ToastContext';
+import { financeDataService } from '../services/financeDataService';
 import type { Category, PaginatedResponse, Transaction, TransactionPayload, TransactionStatus, TransactionType } from '../types/models';
 import { getErrorMessage } from '../utils/apiError';
 import { formatCurrency, formatDate } from '../utils/formatters';
@@ -95,17 +95,15 @@ export function TransactionsPage() {
   );
 
   const fetchCategories = useCallback(async () => {
-    const response = await api.get<Category[]>('/categories');
-    setCategories(response.data);
+    const allCategories = await financeDataService.listCategories();
+    setCategories(allCategories);
   }, []);
 
   const fetchTransactions = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await api.get<PaginatedResponse<Transaction>>('/transactions', {
-        params: transactionParams,
-      });
-      setTransactions(response.data);
+      const data = await financeDataService.listTransactions(transactionParams);
+      setTransactions(data);
     } catch (error) {
       showToast(getErrorMessage(error, 'Não foi possível carregar as transações.'), 'error');
     } finally {
@@ -124,10 +122,10 @@ export function TransactionsPage() {
   async function handleSubmit(payload: TransactionPayload) {
     try {
       if (editing) {
-        await api.put(`/transactions/${editing.id}`, payload);
+        await financeDataService.updateTransaction(editing.id, payload);
         showToast('Transação atualizada com sucesso.');
       } else {
-        await api.post('/transactions', payload);
+        await financeDataService.createTransaction(payload);
         showToast('Transação criada com sucesso.');
       }
       setEditing(null);
@@ -144,7 +142,7 @@ export function TransactionsPage() {
       return;
     }
     try {
-      await api.delete(`/transactions/${deleteCandidate.id}`);
+      await financeDataService.deleteTransaction(deleteCandidate.id);
       showToast('Transação removida com sucesso.');
       setDeleteCandidate(null);
       await fetchTransactions();
@@ -162,15 +160,13 @@ export function TransactionsPage() {
   );
 
   const fetchRowsForExport = useCallback(async () => {
-    const response = await api.get<PaginatedResponse<Transaction>>('/transactions', {
-      params: {
-        ...transactionParams,
-        page: 0,
-        size: 3000,
-      },
+    const data = await financeDataService.listTransactions({
+      ...transactionParams,
+      page: 0,
+      size: 3000,
     });
 
-    return response.data.content;
+    return data.content;
   }, [transactionParams]);
 
   const handleExportExcel = useCallback(async () => {

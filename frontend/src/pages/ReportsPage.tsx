@@ -30,12 +30,12 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { api } from '../api/client';
 import { ChartCard } from '../components/ChartCard';
 import { EmptyState } from '../components/EmptyState';
 import { SectionHeader } from '../components/SectionHeader';
 import { StatCard } from '../components/StatCard';
 import { useToast } from '../contexts/ToastContext';
+import { financeDataService } from '../services/financeDataService';
 import type { Category, ReportData, TransactionType } from '../types/models';
 import { getErrorMessage } from '../utils/apiError';
 import { formatCompactCurrency, formatCurrency, formatDate } from '../utils/formatters';
@@ -96,14 +96,12 @@ export function ReportsPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [categoriesResponse, reportResponse] = await Promise.all([
-        api.get<Category[]>('/categories', { params: { activeOnly: true } }),
-        api.get<ReportData>('/reports', {
-          params: reportParams,
-        }),
+      const [categoriesData, reportData] = await Promise.all([
+        financeDataService.listCategories({ activeOnly: true }),
+        financeDataService.getReport(reportParams),
       ]);
-      setCategories(categoriesResponse.data);
-      setReport(reportResponse.data);
+      setCategories(categoriesData);
+      setReport(reportData);
     } catch (error) {
       showToast(getErrorMessage(error, 'Não foi possível carregar os relatórios.'), 'error');
     }

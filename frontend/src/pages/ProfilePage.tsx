@@ -19,14 +19,15 @@ import { alpha, useTheme } from '@mui/material/styles';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
-import { api } from '../api/client';
 import { SectionHeader } from '../components/SectionHeader';
+import { financeDataService } from '../services/financeDataService';
+import type { AccountType, ThemePreference } from '../types/models';
 import { getErrorMessage } from '../utils/apiError';
 import { formatDate } from '../utils/formatters';
 
 export function ProfilePage() {
   const theme = useTheme();
-  const { user, updateStoredUser, refreshSession } = useAuth();
+  const { user, updateStoredUser } = useAuth();
   const { showToast } = useToast();
   const [profileForm, setProfileForm] = useState({
     name: '',
@@ -53,9 +54,12 @@ export function ProfilePage() {
   async function saveProfile() {
     setSavingProfile(true);
     try {
-      const { data } = await api.put('/profile', profileForm);
-      updateStoredUser(data);
-      await refreshSession();
+      const updatedUser = await financeDataService.updateProfile({
+        name: profileForm.name,
+        accountType: profileForm.accountType as AccountType,
+        themePreference: profileForm.themePreference as ThemePreference,
+      });
+      updateStoredUser(updatedUser);
       showToast('Perfil atualizado com sucesso.');
     } catch (error) {
       showToast(getErrorMessage(error, 'Não foi possível atualizar o perfil.'), 'error');
@@ -67,7 +71,7 @@ export function ProfilePage() {
   async function changePassword() {
     setSavingPassword(true);
     try {
-      await api.patch('/profile/password', passwordForm);
+      await financeDataService.changePassword(passwordForm);
       setPasswordForm({ currentPassword: '', newPassword: '' });
       showToast('Senha alterada com sucesso.');
     } catch (error) {

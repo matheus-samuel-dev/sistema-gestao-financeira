@@ -16,12 +16,12 @@ import {
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { api } from '../api/client';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { EmptyState } from '../components/EmptyState';
 import { GoalFormDialog } from '../components/forms/GoalFormDialog';
 import { SectionHeader } from '../components/SectionHeader';
 import { useToast } from '../contexts/ToastContext';
+import { financeDataService } from '../services/financeDataService';
 import type { Category, Goal, GoalPayload } from '../types/models';
 import { getErrorMessage } from '../utils/apiError';
 import { formatCurrency, formatDate, formatPercentage } from '../utils/formatters';
@@ -38,12 +38,12 @@ export function GoalsPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [goalsResponse, categoriesResponse] = await Promise.all([
-        api.get<Goal[]>('/goals'),
-        api.get<Category[]>('/categories'),
+      const [goalsData, categoriesData] = await Promise.all([
+        financeDataService.listGoals(),
+        financeDataService.listCategories(),
       ]);
-      setGoals(goalsResponse.data);
-      setCategories(categoriesResponse.data);
+      setGoals(goalsData);
+      setCategories(categoriesData);
     } catch (error) {
       showToast(getErrorMessage(error, 'Não foi possível carregar as metas.'), 'error');
     }
@@ -69,10 +69,10 @@ export function GoalsPage() {
   async function handleSubmit(payload: GoalPayload) {
     try {
       if (editing) {
-        await api.put(`/goals/${editing.id}`, payload);
+        await financeDataService.updateGoal(editing.id, payload);
         showToast('Meta atualizada com sucesso.');
       } else {
-        await api.post('/goals', payload);
+        await financeDataService.createGoal(payload);
         showToast('Meta criada com sucesso.');
       }
       setEditing(null);
@@ -88,7 +88,7 @@ export function GoalsPage() {
       return;
     }
     try {
-      await api.delete(`/goals/${deleteCandidate.id}`);
+      await financeDataService.deleteGoal(deleteCandidate.id);
       showToast('Meta removida com sucesso.');
       setDeleteCandidate(null);
       await fetchData();

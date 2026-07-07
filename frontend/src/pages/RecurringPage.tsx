@@ -15,12 +15,12 @@ import {
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { useCallback, useEffect, useState } from 'react';
-import { api } from '../api/client';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { EmptyState } from '../components/EmptyState';
 import { RecurringFormDialog } from '../components/forms/RecurringFormDialog';
 import { SectionHeader } from '../components/SectionHeader';
 import { useToast } from '../contexts/ToastContext';
+import { financeDataService } from '../services/financeDataService';
 import type { Category, RecurringPayload, RecurringTransaction } from '../types/models';
 import { getErrorMessage } from '../utils/apiError';
 import { formatCurrency, formatDate } from '../utils/formatters';
@@ -37,12 +37,12 @@ export function RecurringPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [recurringResponse, categoriesResponse] = await Promise.all([
-        api.get<RecurringTransaction[]>('/recurring-transactions'),
-        api.get<Category[]>('/categories'),
+      const [recurringData, categoriesData] = await Promise.all([
+        financeDataService.listRecurringTransactions(),
+        financeDataService.listCategories(),
       ]);
-      setRecurringItems(recurringResponse.data);
-      setCategories(categoriesResponse.data);
+      setRecurringItems(recurringData);
+      setCategories(categoriesData);
     } catch (error) {
       showToast(getErrorMessage(error, 'Não foi possível carregar as recorrências.'), 'error');
     }
@@ -55,10 +55,10 @@ export function RecurringPage() {
   async function handleSubmit(payload: RecurringPayload) {
     try {
       if (editing) {
-        await api.put(`/recurring-transactions/${editing.id}`, payload);
+        await financeDataService.updateRecurringTransaction(editing.id, payload);
         showToast('Recorrência atualizada com sucesso.');
       } else {
-        await api.post('/recurring-transactions', payload);
+        await financeDataService.createRecurringTransaction(payload);
         showToast('Recorrência criada com sucesso.');
       }
       setEditing(null);
@@ -74,7 +74,7 @@ export function RecurringPage() {
       return;
     }
     try {
-      await api.delete(`/recurring-transactions/${deleteCandidate.id}`);
+      await financeDataService.deleteRecurringTransaction(deleteCandidate.id);
       showToast('Recorrência inativada com sucesso.');
       setDeleteCandidate(null);
       await fetchData();

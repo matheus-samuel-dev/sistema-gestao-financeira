@@ -7,6 +7,7 @@ import {
   isDemoEmail,
   normalizeDemoEmail,
 } from '../data/demoSession';
+import { financeDataService, resetDemoStore } from '../services/financeDataService';
 import type { AuthResponse, LoginRequest, RegisterRequest, ThemePreference, UserProfile } from '../types/session';
 import { getErrorMessage } from '../utils/apiError';
 import {
@@ -98,13 +99,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
+    resetDemoStore();
     clearSession();
     setSession({ token: null, user: null });
   }, []);
 
   const refreshSession = useCallback(async () => {
     try {
-      const { data } = await api.get<AuthResponse>('/auth/me');
+      const data = await financeDataService.refreshSession();
       persistSession(data);
       setSession({ token: data.token, user: data.user });
     } catch (error) {
@@ -117,7 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user) {
       return;
     }
-    const { data } = await api.put<UserProfile>('/profile', {
+    const data = await financeDataService.updateProfile({
       name: user.name,
       accountType: user.accountType,
       themePreference,

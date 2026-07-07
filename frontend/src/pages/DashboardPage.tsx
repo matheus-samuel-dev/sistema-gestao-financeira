@@ -32,18 +32,16 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { api } from '../api/client';
 import { ChartCard } from '../components/ChartCard';
 import { EmptyState } from '../components/EmptyState';
 import { IconBadge } from '../components/IconBadge';
 import { SectionHeader } from '../components/SectionHeader';
 import { StatCard } from '../components/StatCard';
-import { DEMO_CATEGORIES, DEMO_DASHBOARD_DATA, isDemoToken } from '../data/demoSession';
+import { financeDataService } from '../services/financeDataService';
 import type { Category, DashboardData, TransactionType } from '../types/models';
 import { getErrorMessage } from '../utils/apiError';
 import { formatCompactCurrency, formatCurrency, formatDate, formatPercentage } from '../utils/formatters';
 import { useToast } from '../contexts/ToastContext';
-import { getStoredToken } from '../utils/sessionStorage';
 
 interface FilterState {
   month: string;
@@ -91,7 +89,6 @@ export function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const dashboardAbortRef = useRef<AbortController | null>(null);
   const manualRefreshInFlightRef = useRef(false);
-  const isDemoMode = isDemoToken(getStoredToken());
 
   const dashboardParams = useMemo(
     () => ({
@@ -108,20 +105,15 @@ export function DashboardPage() {
   );
 
   const fetchCategories = useCallback(async () => {
-    if (isDemoMode) {
-      setCategories(DEMO_CATEGORIES);
-      return;
-    }
-
     try {
-      const response = await api.get<Category[]>('/categories', { params: { activeOnly: true } });
-      setCategories(response.data);
+      const activeCategories = await financeDataService.listCategories({ activeOnly: true });
+      setCategories(activeCategories);
     } catch (error) {
       if (!isCanceledRequest(error)) {
         console.error('[Dashboard] Não foi possível carregar categorias.', error);
       }
     }
-  }, [isDemoMode]);
+  }, []);
 
   const fetchDashboard = useCallback(async (options?: { showSuccess?: boolean }) => {
     if (options?.showSuccess && manualRefreshInFlightRef.current) {
@@ -138,20 +130,10 @@ export function DashboardPage() {
 
     setLoading(true);
     try {
-      if (isDemoMode) {
-        setCategories(DEMO_CATEGORIES);
-        setData(DEMO_DASHBOARD_DATA);
-        if (options?.showSuccess) {
-          showToast('Dashboard demo atualizado com sucesso.', 'success');
-        }
-        return;
-      }
-
-      const response = await api.get<DashboardData>('/dashboard', {
-        params: dashboardParams,
+      const dashboardData = await financeDataService.getDashboard(dashboardParams, {
         signal: controller.signal,
       });
-      setData(response.data);
+      setData(dashboardData);
       if (options?.showSuccess) {
         showToast('Dashboard atualizado com sucesso.', 'success');
       }
@@ -170,7 +152,7 @@ export function DashboardPage() {
         manualRefreshInFlightRef.current = false;
       }
     }
-  }, [dashboardParams, isDemoMode, showToast]);
+  }, [dashboardParams, showToast]);
 
   useEffect(() => {
     void fetchCategories();

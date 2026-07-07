@@ -15,13 +15,13 @@ import {
   Typography,
 } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
-import { api } from '../api/client';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { EmptyState } from '../components/EmptyState';
 import { CategoryFormDialog } from '../components/forms/CategoryFormDialog';
 import { IconBadge } from '../components/IconBadge';
 import { SectionHeader } from '../components/SectionHeader';
 import { useToast } from '../contexts/ToastContext';
+import { financeDataService } from '../services/financeDataService';
 import type { Category, CategoryPayload } from '../types/models';
 import { getErrorMessage } from '../utils/apiError';
 
@@ -34,8 +34,8 @@ export function CategoriesPage() {
 
   const fetchCategories = useCallback(async () => {
     try {
-      const response = await api.get<Category[]>('/categories');
-      setCategories(response.data);
+      const data = await financeDataService.listCategories();
+      setCategories(data);
     } catch (error) {
       showToast(getErrorMessage(error, 'Não foi possível carregar as categorias.'), 'error');
     }
@@ -48,10 +48,10 @@ export function CategoriesPage() {
   async function handleSubmit(payload: CategoryPayload) {
     try {
       if (editing) {
-        await api.put(`/categories/${editing.id}`, payload);
+        await financeDataService.updateCategory(editing.id, payload);
         showToast('Categoria atualizada com sucesso.');
       } else {
-        await api.post('/categories', payload);
+        await financeDataService.createCategory(payload);
         showToast('Categoria criada com sucesso.');
       }
       setEditing(null);
@@ -64,7 +64,7 @@ export function CategoriesPage() {
 
   async function toggleCategory(category: Category) {
     try {
-      await api.patch(`/categories/${category.id}/status`, { active: !category.active });
+      await financeDataService.toggleCategoryStatus(category.id, !category.active);
       showToast(category.active ? 'Categoria inativada.' : 'Categoria reativada.');
       await fetchCategories();
     } catch (error) {
@@ -77,7 +77,7 @@ export function CategoriesPage() {
       return;
     }
     try {
-      await api.delete(`/categories/${deleteCandidate.id}`);
+      await financeDataService.deleteCategory(deleteCandidate.id);
       showToast('Categoria removida com sucesso.');
       setDeleteCandidate(null);
       await fetchCategories();
